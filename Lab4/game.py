@@ -2,24 +2,45 @@ import random
 from words import WORDS, HINTS
 from stats import SessionStats
 
+DIFFICULTIES = {
+    "easy": {"lives": 8, "base_score": 3, "hint_penalty": 1},
+    "medium": {"lives": 6, "base_score": 5, "hint_penalty": 2},
+    "hard": {"lives": 4, "base_score": 8, "hint_penalty": 3},
+}
+
 
 class HangmanGame:
     def __init__(self):
         self.score = 0
         self.streak = 0
         self.category = "technology"
+        self.difficulty = "medium"
         self.secret = ""
         self.guessed = set()
         self.wrong = set()
-        self.lives = 6
+        self.lives = DIFFICULTIES[self.difficulty]["lives"]
         self.hint_used = False
         self.stats = SessionStats()
+
+    def set_difficulty(self, diff):
+        diff = diff.lower().strip()
+        if diff in DIFFICULTIES:
+            self.difficulty = diff
+            return True
+        return False
+
+    def set_category(self, cat):
+        cat = cat.lower().strip()
+        if cat in WORDS:
+            self.category = cat
+            return True
+        return False
 
     def start_round(self):
         self.secret = random.choice(WORDS[self.category])
         self.guessed.clear()
         self.wrong.clear()
-        self.lives = 6
+        self.lives = DIFFICULTIES[self.difficulty]["lives"]
         self.hint_used = False
 
     def masked(self):
@@ -45,7 +66,6 @@ class HangmanGame:
         if self.hint_used:
             return None
         self.hint_used = True
-        self.score = max(0, self.score - 1)
         return HINTS.get(self.secret, "No hint available.")
 
     def play_round(self):
@@ -53,7 +73,7 @@ class HangmanGame:
         while self.lives > 0 and not self.won():
             print("\nWord:", self.masked())
             print("Wrong:", " ".join(sorted(self.wrong)) or "-")
-            print("Lives:", self.lives, "Score:", self.score, "Streak:", self.streak)
+            print(f"Lives: {self.lives} Score: {self.score} Streak: {self.streak} Diff: {self.difficulty}")
             raw = input("Letter, /hint, or /quit: ").strip().lower()
             if raw == "/quit":
                 return False
@@ -65,8 +85,11 @@ class HangmanGame:
 
         if self.won():
             self.streak += 1
-            self.score += 5 + self.streak
-            print("Solved:", self.secret)
+            diff_cfg = DIFFICULTIES[self.difficulty]
+            penalty = diff_cfg["hint_penalty"] if self.hint_used else 0
+            earned = max(1, diff_cfg["base_score"] + self.streak - penalty)
+            self.score += earned
+            print(f"Solved: {self.secret} (+{earned} points)")
             self.stats.record(True, self.streak)
             return True
 
@@ -83,15 +106,22 @@ class HangmanGame:
         print("A session consists of multiple rounds.")
         while True:
             print("\nCategories:", ", ".join(WORDS))
-            raw = input("Choose category or q: ").strip().lower()
+            print(f"Current category: {self.category} | Difficulty: {self.difficulty}")
+            raw = input(f"Choose category [Enter to keep '{self.category}', or 'q' to quit]: ").strip().lower()
             if raw == "q":
                 print("Final score:", self.score, " Streak:", self.streak)
                 self.print_session_stats()
                 return
-            if raw not in WORDS:
-                print("Unknown category.")
-                continue
-            self.category = raw
+            if raw:
+                if not self.set_category(raw):
+                    print("Unknown category.")
+                    continue
+
+            diff_raw = input(f"Choose difficulty (easy, medium, hard) [Enter to keep '{self.difficulty}']: ").strip().lower()
+            if diff_raw:
+                if not self.set_difficulty(diff_raw):
+                    print("Unknown difficulty. Keeping current.")
+
             if not self.play_round():
                 print("Final score:", self.score, " Streak:", self.streak)
                 self.print_session_stats()
