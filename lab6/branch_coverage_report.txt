@@ -1,0 +1,17 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.6, pytest-9.2.0, pluggy-1.7.0
+rootdir: C:\Users\videe\Downloads\SE_repo\lab6
+plugins: anyio-4.14.1
+collected 23 items
+
+BranchCoverageTest_student_grades.py .......................             [100%]
+
+============================= 23 passed in 0.10s ==============================
+
+PS C:\Users\videe\Downloads\SE_repo\lab6> coverage report -m
+Name                                   Stmts   Miss Branch BrPart  Cover   Missing
+----------------------------------------------------------------------------------
+BranchCoverageTest_student_grades.py      61      0      0      0   100%
+student_grades.py                         33      0     26      0   100%
+----------------------------------------------------------------------------------
+TOTAL                                     94      0     26      0   100%
