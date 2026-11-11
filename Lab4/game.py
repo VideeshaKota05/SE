@@ -27,9 +27,10 @@ class HangmanGame:
         return all(ch in self.guessed for ch in set(self.secret))
 
     def guess(self, letter):
+        letter = letter.lower()
         if len(letter) != 1 or not letter.isalpha():
             return "Enter one letter."
-        if letter in self.guessed:
+        if letter in self.guessed or letter in self.wrong:
             return "Already guessed."
         if letter in self.secret:
             self.guessed.add(letter)
